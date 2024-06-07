@@ -128,7 +128,7 @@ static int MaxAEChange=10;
 static int ISPFrameDelay=100;
 
 static u32 g_ThreadRun = 0;
-pthread_t g_Cus3aThread;
+static pthread_t g_Cus3aThread;
 
 static void* Cus3aThreadProcRoutine(void* data);
 static int Cus3aThreadProcAE(void);
@@ -223,9 +223,9 @@ static int Cus3aDoAE(ISP_AE_INFO *info, ISP_AE_RESULT *result)
         int y_upper = 0x38;
         int change_ratio = MaxAEChange; // percentage , orginal value 10
         int Gain_Min = 1024 * 2;
-        int Gain_Max = 1024 * 1000;
+        int Gain_Max = 2048 * 1000; //was 1024
         int Shutter_Min = 150;
-        int Shutter_Max = 11111;//33333 , limited to 30fps
+        int Shutter_Max = 5000;//limited to 200fps //33333 , limited to 30fps
 
         result->SensorGain = info->SensorGain;
         result->Shutter = info->Shutter;
@@ -397,7 +397,7 @@ static void customAE(const char *value) {
 	    Cus3aThreadInitialization();
         Custom3AStarted=true;
     }
-	RETURN("customAE started");
+	RETURN("CustomAE v:0.2 started");
 }
 
 static void stopAE(const char *value) {

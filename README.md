@@ -4,6 +4,8 @@ For details please see https://github.com/OpenIPC/majestic-plugins
 Build OpenIPC from source, assuming here /home/home/src/ssc30kq/openipc-firmware.
 
 Copy contents over /home/home/src/ssc30kq/openipc-firmware/output/build/majestic-plugins-HEAD/
+cp *.c /home/home/src/ssc30kq/openipc-firmware/output/build/majestic-plugins-HEAD/sigmastar/
+cp -r ./include/* /home/home/src/ssc30kq/openipc-firmware/output/build/majestic-plugins-HEAD/sigmastar/include/
 
 ```
 /usr/bin/make -j9 -C /home/home/src/ssc30kq/openipc-firmware/output/ majestic-plugins-rebuild BOARD=ssc30kq_fpv
