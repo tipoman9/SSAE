@@ -43,10 +43,11 @@ echo customAE 20,5,23000 | nc localhost 4000
 ### stop3a
 ```echo stopAE 100 | nc localhost 4000```
 
-### get/set manual AWB
-get current values 
+### setAWB
+Can get or set manual AWB values
+to get current values 
 ```echo setAWB | nc localhost 4000```
-set new values:
+to set new values:
 ```echo setAWB 1000,1051,4100 | nc localhost 4000```
 
 ## To install on cam and run
