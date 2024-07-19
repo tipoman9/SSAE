@@ -126,6 +126,7 @@ static void set_rotation(const char *value) {
 
 static int MaxAEChange=10;
 static int ISPFrameDelay=100;
+static int ISPMaxGain=0;
 
 static u32 g_ThreadRun = 0;
 static pthread_t g_Cus3aThread;
@@ -223,9 +224,12 @@ static int Cus3aDoAE(ISP_AE_INFO *info, ISP_AE_RESULT *result)
         int y_upper = 0x38;
         int change_ratio = MaxAEChange; // percentage , orginal value 10
         int Gain_Min = 1024 * 2;
-        int Gain_Max = 2048 * 1000; //was 1024
+        int Gain_Max = 2048 * 200; //was 1024
         int Shutter_Min = 150;
-        int Shutter_Max = 5000;//limited to 200fps //33333 , limited to 30fps
+        int Shutter_Max = 8192;//limited to 122fps //33333 , limited to 30fps
+
+        if (ISPMaxGain>0)
+            Gain_Max=ISPMaxGain;
 
         result->SensorGain = info->SensorGain;
         result->Shutter = info->Shutter;
@@ -371,16 +375,21 @@ static int FrameDelayMS=100, PercentChange=10;
  */
 static void customAE(const char *value) {
  	
-    int fps=0, percent=0;
- 	 
+    int fps=0, percent=0, MaxGain=0;
+ 	 int result;
 
 	int index = atoi(value);
     if (strlen(value) > 0 ){        
         if (strchr(value, ',') != NULL) {            
-            if (sscanf(value, "%d,%d", &fps, &percent) == 2) {// Use sscanf to read two integers separated by a comma
-               // printf("FPS: %d Percent AE Change: %d\n", fps, percent);               
+            result = sscanf(value, "%d,%d,%d", &fps, &percent, &MaxGain);
+            if (result == 3) {
+            // Use sscanf to read three integers separated by commas
+                printf("FPS: %d, Percent AE Change: %d, Max Gain: %d\n", fps, percent, MaxGain);
+            } else if (result == 2) {
+                // Use sscanf to read two integers separated by a comma
+                printf("FPS: %d, Percent AE Change: %d\n", fps, percent);
             } else {
-                printf("Failed to parse two numbers from the params.\n");
+                printf("Failed to parse two or three numbers from the params.\n");
             }
         } else {
             fps = atoi(value);        
@@ -388,16 +397,22 @@ static void customAE(const char *value) {
         if (percent!=0)
             MaxAEChange = percent;
         if (fps!=0)
-            ISPFrameDelay = 1000/fps;        
+            ISPFrameDelay = 1000/fps;   
+        if (MaxGain!=0)
+            ISPMaxGain = MaxGain;     
+
+          
     }
-	printf("FrameDelay: %dms Percent AE Change: %d\n", ISPFrameDelay, MaxAEChange);
+
+    
+	printf("FrameDelay: %dms Percent AE Change: %d, MaxGain: %d\n", ISPFrameDelay, MaxAEChange, MaxGain);
      
     if (!Custom3AStarted){
         stop3a(value);//Stop built-in 3A module   
 	    Cus3aThreadInitialization();
         Custom3AStarted=true;
     }
-	RETURN("CustomAE v:0.2 started");
+	RETURN("CustomAE v:0.3a started");
 }
 
 static void stopAE(const char *value) {

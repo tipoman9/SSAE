@@ -34,6 +34,11 @@ This is the Exposure change ratio per cicle. Set it to values between 10 and 30.
 Large values will make the AE react quickly, but with noticeable "blink" or "step".
 Lower values will have smooth but slow transition.
 
+MaxSensorGain can be specified as third param, like this (set max sensor gain at 23 000)
+```
+echo customAE 20,5,23000 | nc localhost 4000
+```
+
 
 ### stop3a
 ```echo stopAE 100 | nc localhost 4000```
