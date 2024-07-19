@@ -190,6 +190,31 @@ static void* Cus3aThreadProcRoutine(void* data)
     return 0;
 }
 
+static void TestSet_AWB(int R, int G, int B){
+      /*Check AWB param*/
+    CusAWBInfo_t *pAwbInfo;
+    CusAWBResult_t *pAwbResult;
+    pAwbInfo = (CusAWBInfo_t *)malloc(sizeof(CusAWBInfo_t));
+    memset(pAwbInfo,0,sizeof(CusAWBInfo_t));
+    MI_ISP_CUS3A_GetAwbStatus(0,pAwbInfo);
+    printf("AwbCurrentValue ,Rgain=%d,Ggain=%d,Bgain=%d\n",
+            pAwbInfo->CurRGain,
+            pAwbInfo->CurGGain,
+            pAwbInfo->CurBGain
+          );
+    free(pAwbInfo);
+
+    /*Set AWB param*/
+    pAwbResult = (CusAWBResult_t *)malloc(sizeof(CusAWBResult_t));
+    memset(pAwbResult,0,sizeof(CusAWBResult_t));
+    pAwbResult->Size = sizeof(CusAWBResult_t);
+    pAwbResult->R_gain = R;
+    pAwbResult->G_gain = G;
+    pAwbResult->B_gain = B;
+    MI_ISP_CUS3A_SetAwbParam(0,pAwbResult);
+    free(pAwbResult);
+}
+
 static int Cus3aDoAE(ISP_AE_INFO *info, ISP_AE_RESULT *result)
 {
     unsigned int max = info->AvgBlkY * info->AvgBlkX;
@@ -356,13 +381,18 @@ Cus3aThreadProcAE_EXIT:
     return 0;
 }
 
+
+static void pauseAE(){
+     MI_ISP_SM_STATE_TYPE_e eData = SS_ISP_STATE_PAUSE;
+     MI_ISP_AE_SetState(0, &eData);
+}
 static void stop3a(const char *value) {
- 
+
+    MI_ISP_RegisterIspApiAgent(0, NULL, NULL);//Lets test this also
 	int r1=CUS3A_RegInterface(0,NULL,NULL,NULL);//No effect, AE works, starts with  [MI_ISP_CUS3A_Enable] AE = 1, AWB = 1, AF = 1	
 	CUS3A_Release();//This only stops AE, majestic load drops 3 times
-    printf("************  CUS3A_Release: %d **********\n",r1);
- 	
-	RETURN("CUS3A Stopped: %d", r1);
+    printf("************  CUS3A_Release: %d **********\n",r1); 	
+	RETURN("CUS3A Stopped: %d", r1);  
 }
 static bool Custom3AStarted=false;
 
@@ -403,16 +433,77 @@ static void customAE(const char *value) {
 
           
     }
-
-    
 	printf("FrameDelay: %dms Percent AE Change: %d, MaxGain: %d\n", ISPFrameDelay, MaxAEChange, MaxGain);
      
     if (!Custom3AStarted){
-        stop3a(value);//Stop built-in 3A module   
+        pauseAE();//
+        stop3a(value);//Stop built-in 3A module           
 	    Cus3aThreadInitialization();
         Custom3AStarted=true;
     }
-	RETURN("CustomAE v:0.3a started");
+
+	RETURN("CustomAE v:0.3B started!");
+}
+
+     /**
+  * expects two numbers separated by comma, first is FPS to read, second is max percent change.
+  * for example 20,15
+  * Can be called when already started only to change params
+ */
+static void setAWB(const char *value) {
+    printf("setAWB Start\r\n"); 
+    
+ 	CusAWBInfo_t *pAwbInfo;
+    CusAWBResult_t *pAwbResult;
+    Cus3AEnable_t *pCus3AEnable;
+    MI_U32 R=0, G=0, B=0;
+    MI_U32 CR=0, CG=0, CB=0;
+ 	int result;
+
+    /*Check CUS3A*/
+    if (true){//Do we need this?
+        pCus3AEnable = malloc(sizeof(Cus3AEnable_t));
+        pCus3AEnable->bAE = 0;
+        pCus3AEnable->bAWB = 0;
+        pCus3AEnable->bAF = 0;
+        MI_ISP_CUS3A_Enable(0, pCus3AEnable);
+        free(pCus3AEnable);
+    }
+
+    pAwbInfo = (CusAWBInfo_t *)malloc(sizeof(CusAWBInfo_t));
+    memset(pAwbInfo,0,sizeof(CusAWBInfo_t));
+    MI_ISP_CUS3A_GetAwbStatus(0,pAwbInfo);
+    CR=pAwbInfo->CurRGain; CG= pAwbInfo->CurGGain; CB= pAwbInfo->CurBGain;
+    printf("AWB Current Values ,Red gain=%d,Green gain=%d,Blue gain=%d\n", CR,CG,CB);
+          
+    free(pAwbInfo);
+
+	int index = atoi(value);
+    if (strlen(value) > 0 ){        
+        if (strchr(value, ',') != NULL) {            
+            result = sscanf(value, "%d,%d,%d", &R, &G, &B);
+            if (result == 3) {
+            // Use sscanf to read three integers separated by commas
+                printf("Set Sendor Gain for Red: %d, Green: %d, Blue: %d\n", R, G, B);
+                /*Set AWB param*/
+                pAwbResult = (CusAWBResult_t *)malloc(sizeof(CusAWBResult_t));
+                memset(pAwbResult,0,sizeof(CusAWBResult_t));
+                pAwbResult->Size = sizeof(CusAWBResult_t);
+                pAwbResult->R_gain = R;
+                pAwbResult->G_gain = G;
+                pAwbResult->B_gain = B;
+                MI_S32 res=MI_ISP_CUS3A_SetAwbParam(0,pAwbResult);
+                free(pAwbResult);
+                RETURN("Set Sendor Gain for Red: %d, Green: %d, Blue: %d , result:%d\n", R, G, B, res );
+            } 
+        } else {
+            printf("Failed to parse three numbers from the params.\n");
+        }
+    }else  
+	    RETURN("AWB Current Gain: Red:%d Green:%d Blue:%d\n", CR,CG,CB);
+
+    RETURN("Set AWB v:0.1 called");
+
 }
 
 static void stopAE(const char *value) {
@@ -442,6 +533,7 @@ static table custom[] = {
 //    { "reset3a", &reset3a },
     { "customAE", &customAE },
     { "stopAE", &stopAE },
+    { "setAWB", &setAWB },
 	{ "help", &get_usage },
 };
 

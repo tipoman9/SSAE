@@ -34,18 +34,22 @@ This is the Exposure change ratio per cicle. Set it to values between 10 and 30.
 Large values will make the AE react quickly, but with noticeable "blink" or "step".
 Lower values will have smooth but slow transition.
 
-MaxSensorGain can be specified as third param, like this (set max sensor gain at 23 000)
+"MaxSensorGain" can be specified as third param.  
+example (set max sensor gain at 23 000)
 ```
 echo customAE 20,5,23000 | nc localhost 4000
 ```
 
-
 ### stop3a
 ```echo stopAE 100 | nc localhost 4000```
 
+### get/set manual AWB
+get current values 
+```echo setAWB | nc localhost 4000```
+set new values:
+```echo setAWB 1000,1051,4100 | nc localhost 4000```
 
-
-## To run
+## To install on cam and run
 ### First enable plugin support 
 cli -s .system.plugins true
 Copy .so file to /usr/lib
