@@ -1,4 +1,6 @@
-For details please see https://github.com/OpenIPC/majestic-plugins
+## SigmaStar custom Automatic Exposure(AE) for OpenIPC
+### Decreases cpu load on ssc30kq and ssc338q allows for h265 stream at 1920x1080 over 15Mbit/s
+For integration details please see https://github.com/OpenIPC/majestic-plugins
 
 ## Compile
 Build OpenIPC from source, assuming here /home/home/src/ssc30kq/openipc-firmware.

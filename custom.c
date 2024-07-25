@@ -249,7 +249,7 @@ static int Cus3aDoAE(ISP_AE_INFO *info, ISP_AE_RESULT *result)
         int y_upper = 0x38;
         int change_ratio = MaxAEChange; // percentage , orginal value 10
         int Gain_Min = 1024 * 2;
-        int Gain_Max = 2048 * 200; //was 1024
+        int Gain_Max = 2048 * 20; //was 1024, no need of dark scenery optimization for FPV
         int Shutter_Min = 150;
         int Shutter_Max = 8192;//limited to 122fps //33333 , limited to 30fps
 
